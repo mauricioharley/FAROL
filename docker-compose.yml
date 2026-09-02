@@ -1,0 +1,136 @@
+name: farol
+
+services:
+  farol-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${FAROL_DB_NAME:?defina FAROL_DB_NAME no .env}
+      POSTGRES_USER: ${FAROL_DB_USER:?defina FAROL_DB_USER no .env}
+      POSTGRES_PASSWORD: ${FAROL_DB_PASSWORD:?defina FAROL_DB_PASSWORD no .env}
+    volumes:
+      - farol-db-data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+
+  model-downloader:
+    image: python:3.12-slim
+    environment:
+      HF_HOME: /tmp/huggingface
+      MODEL_REPO: ${MODEL_REPO:-Qwen/Qwen3-4B-GGUF}
+      MODEL_FILE: ${MODEL_FILE:-Qwen3-4B-Q4_K_M.gguf}
+    volumes:
+      - llm-models:/models
+      - ./scripts/download_model.py:/download_model.py:ro
+    command: >
+      sh -c "pip install --no-cache-dir huggingface_hub &&
+             python /download_model.py"
+
+  llm:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    depends_on:
+      model-downloader:
+        condition: service_completed_successfully
+    volumes:
+      - llm-models:/models:ro
+    command:
+      - "-m"
+      - "/models/${MODEL_FILE:-Qwen3-4B-Q4_K_M.gguf}"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+      - "--ctx-size"
+      - "4096"
+      - "--alias"
+      - "${LLM_MODEL:-qwen3-4b}"
+      - "--threads"
+      - "${LLAMA_THREADS:-4}"
+      - "--jinja"
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  pii-engine:
+    build: ./pii-engine
+    # Opcional: mount read-only do storage do CKAN de producao, so faz sentido se o scanner
+    # rodar no mesmo host que ja tem esse volume montado. Ative manualmente se for o seu caso.
+    # Se o caminho do host for outro, o lado direito do mount (caminho dentro do container)
+    # precisa bater com FAROL_CKAN_STORAGE_PATH (ou reconfigure os dois juntos).
+    # volumes:
+    #   - /mnt/ckan/storage/resources:/mnt/ckan/storage/resources:ro
+    environment:
+      FAROL_LLM_URL: ${FAROL_LLM_URL:-http://llm:8080}
+      FAROL_LLM_MODEL: ${LLM_MODEL:-qwen3-4b}
+      FAROL_LLM_TIMEOUT_SECONDS: ${FAROL_LLM_TIMEOUT_SECONDS:-60}
+      FAROL_VERIFY_TLS: ${FAROL_VERIFY_TLS:-true}
+      FAROL_HOSTS_TLS_INSEGURO: ${FAROL_HOSTS_TLS_INSEGURO:-}
+      FAROL_INGEST_TOKEN: ${FAROL_INGEST_TOKEN}
+      FAROL_CKAN_STORAGE_PATH: ${FAROL_CKAN_STORAGE_PATH:-/mnt/ckan/storage/resources}
+    depends_on:
+      - llm
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  painel:
+    build: ./painel
+    environment:
+      FAROL_DB_DSN: ${FAROL_DB_DSN:?defina FAROL_DB_DSN no .env}
+      FAROL_TECNICO_USER: ${FAROL_TECNICO_USER}
+      FAROL_TECNICO_PASSWORD: ${FAROL_TECNICO_PASSWORD}
+      FAROL_GERENCIAL_USER: ${FAROL_GERENCIAL_USER}
+      FAROL_GERENCIAL_PASSWORD: ${FAROL_GERENCIAL_PASSWORD}
+      FAROL_SESSION_SECRET: ${FAROL_SESSION_SECRET:?defina FAROL_SESSION_SECRET no .env (openssl rand -hex 32)}
+      FAROL_INGEST_TOKEN: ${FAROL_INGEST_TOKEN}
+      FAROL_PORTAL_PRODUCAO: ${FAROL_PORTAL_PRODUCAO}
+      FAROL_PORTAL_SINTETICO: ${FAROL_PORTAL_SINTETICO}
+      FAROL_SCANNER_URL: ${FAROL_SCANNER_URL:-http://scanner:8000}
+      FAROL_PII_ENGINE_URL: ${FAROL_PII_ENGINE_URL:-http://pii-engine:8000}
+    depends_on:
+      - farol-db
+      - scanner
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  # Terminador TLS na frente do painel - o login por sessão (cookie assinado
+  # com FAROL_SESSION_SECRET) só deixa de trafegar credencial em claro na
+  # rede com isto na frente. O painel em si (acima) não publica porta
+  # nenhuma pro host, só fica alcançável via este proxy. Certificado
+  # autoassinado gerado no start (ver painel/nginx/Dockerfile); troque por
+  # um emitido de verdade num deploy real.
+  painel-nginx:
+    build: ./painel/nginx
+    depends_on:
+      - painel
+      - painel-gerencial
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  painel-gerencial:
+    build: ./painel-gerencial
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  # Servico permanente desde 2026-08-22 - antes so' rodava sob demanda via
+  # `docker compose run` (perfil "manual"). Disparar/cancelar/listar
+  # organizacao agora acontece via API HTTP interna, chamada pelo painel
+  # (nunca exposta direto pro host) - decisao explicita do Mauricio de nao
+  # exigir interacao por linha de comando, nem de administrador tecnico.
+  scanner:
+    build: ./scanner
+    environment:
+      FAROL_DB_DSN: ${FAROL_DB_DSN:?defina FAROL_DB_DSN no .env}
+      FAROL_INGEST_TOKEN: ${FAROL_INGEST_TOKEN}
+      FAROL_CKAN_STORAGE_PATH: ${FAROL_CKAN_STORAGE_PATH:-/mnt/ckan/storage/resources}
+    depends_on:
+      - farol-db
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+volumes:
+  farol-db-data:
+  llm-models:

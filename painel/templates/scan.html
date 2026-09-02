@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAROL - Novo scan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F4F1; --surface: #FFFFFF; --surface-2: #E6ECE6;
+    --text: #142420; --text-muted: #51625B; --border: #D2DBD2;
+    --accent: #1F5750; --accent-strong: #123C37; --accent-soft: #DEEAE7;
+    --ok: #2C7A4C; --ok-soft: #E3F1E7;
+    --warn: #8A5D0B; --warn-soft: #F5EAD2;
+    --crit: #9E3A2D; --crit-soft: #F5E0DB;
+    --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+      --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+      --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+      --ok: #5FBE85; --ok-soft: #172B1D;
+      --warn: #E0B357; --warn-soft: #362A14;
+      --crit: #E17B6B; --crit-soft: #37211C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+    --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+    --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+    --ok: #5FBE85; --ok-soft: #172B1D;
+    --warn: #E0B357; --warn-soft: #362A14;
+    --crit: #E17B6B; --crit-soft: #37211C;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: var(--font-display); background: var(--bg); color: var(--text); margin: 0; padding: 32px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .logo { flex-shrink: 0; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+  #theme-toggle {
+    font-family: var(--font-display); font-size: 0.85rem; cursor: pointer;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 14px;
+  }
+  .topbar-actions { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+  section { margin-bottom: 28px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 640px; }
+  label { display: block; font-size: 0.85rem; color: var(--text-muted); margin: 14px 0 5px; }
+  label:first-child { margin-top: 0; }
+  fieldset { border: none; padding: 0; margin: 14px 0 0; }
+  fieldset:first-child { margin-top: 0; }
+  fieldset legend { display: block; font-size: 0.85rem; color: var(--text-muted); padding: 0; margin: 0 0 5px; }
+  input[type=text], input[type=password], select {
+    width: 100%; font-family: var(--font-display); font-size: 0.9rem; padding: 8px 10px;
+    background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+  }
+  .linha { display: flex; gap: 14px; align-items: flex-end; }
+  .linha > div { flex: 1; }
+  .checagem { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; margin-top: 14px; }
+  .checagem input { width: auto; }
+  .chips-formato { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip-formato { font-size: 0.78rem; }
+  .chip-formato input { width: auto; margin-right: 4px; }
+  .chip-formato label { display: inline-flex; align-items: center; margin: 0; font-size: 0.78rem; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+  .chip-formato input:checked + label { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
+  #orgs-lista { max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-top: 6px; background: var(--bg); }
+  #orgs-lista label { display: block; font-size: 0.85rem; color: var(--text); margin: 4px 0; cursor: pointer; }
+  #orgs-lista input { width: auto; margin-right: 6px; }
+  .aviso { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+  .botoes { display: flex; gap: 10px; margin-top: 18px; }
+  button.primario, button.secundario, button.link-botao {
+    font-family: var(--font-display); font-size: 0.88rem; padding: 9px 18px; border-radius: 6px; cursor: pointer;
+  }
+  button.primario { background: var(--accent); color: white; border: none; }
+  button.primario:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secundario { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  button.link-botao { background: none; border: 1px solid var(--crit); color: var(--crit); font-size: 0.72rem; padding: 3px 10px; }
+  #mensagem-erro { color: var(--crit); font-size: 0.85rem; margin-top: 10px; display: none; }
+  .execucao { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; max-width: 640px; }
+  .execucao-topo { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 8px; gap: 10px; }
+  .execucao-topo > span:first-child { flex: 1; }
+  .barra { background: var(--surface-2); border-radius: 999px; height: 10px; overflow: hidden; }
+  .barra-preenchida { background: var(--accent); height: 100%; border-radius: 999px; transition: width 0.3s; }
+  .execucao-status { font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+  .status-rodando { background: var(--warn-soft); color: var(--warn); }
+  .status-concluido { background: var(--ok-soft); color: var(--ok); }
+  .status-erro { background: var(--crit-soft); color: var(--crit); }
+  .status-cancelado { background: var(--surface-2); color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1 style="display:flex;align-items:center;gap:10px;">
+      {% include '_logo.html' %}
+      FAROL - Novo scan
+    </h1>
+    <div class="topbar-actions">
+      <a href="/" style="color:var(--text-muted);font-size:0.85rem;">← Painel técnico</a>
+      <button id="theme-toggle" type="button">🌓 Alternar tema</button>
+      <span style="font-size:0.82rem;color:var(--text-muted);">{{ usuario }}</span>
+      <a href="/logout" style="font-size:0.82rem;color:var(--text-muted);">Sair</a>
+    </div>
+  </div>
+
+  <section>
+    <h2>Disparar scan</h2>
+    <div class="card">
+      <label for="base_url">URL base do CKAN a auditar</label>
+      <input type="text" id="base_url" placeholder="https://dados.exemplo.gov.br">
+
+      <div class="linha">
+        <div>
+          <label for="ambiente">Ambiente (rótulo do achado)</label>
+          <select id="ambiente">
+            <option value="sintetico">Sintético</option>
+            <option value="producao">Produção</option>
+          </select>
+        </div>
+        <div>
+          <label for="api_key">Chave de API (opcional)</label>
+          <input type="password" id="api_key" placeholder="só se o portal exigir">
+        </div>
+      </div>
+
+      <fieldset>
+        <legend>Organizações <span class="aviso">(deixe tudo desmarcado para incluir todas)</span></legend>
+        <div class="linha" style="align-items:center;">
+          <button class="secundario" type="button" id="btn-carregar-orgs">Carregar organizações</button>
+          <span id="orgs-status" class="aviso"></span>
+        </div>
+        <div id="orgs-lista"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Formatos de arquivo <span class="aviso">(deixe tudo desmarcado para incluir todos os suportados)</span></legend>
+        <div class="chips-formato" id="chips-formato">
+          {# .shp fica de fora de propósito: um .shp avulso sempre falha na extração (shapefile
+             precisa dos arquivos irmãos .dbf/.shx, que só chegam dentro de um .shz, já coberto
+             abaixo) - listar .shp aqui sugeriria suporte que nunca funciona sozinho. #}
+          {% for f in ['csv','xlsx','ods','json','geojson','yaml','yml','xml','kml','txt','docx','odt','pdf','zip','7z','rar','kmz','shz'] %}
+          <span class="chip-formato">
+            <input type="checkbox" id="formato-{{ f }}" value="{{ f }}">
+            <label for="formato-{{ f }}">.{{ f }}</label>
+          </span>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <div class="checagem">
+        <input type="checkbox" id="incremental">
+        <label for="incremental" style="margin:0;">Modo incremental - incluir só dataset novo ou alterado desde o último scan contra este CKAN</label>
+      </div>
+      <div class="checagem">
+        <input type="checkbox" id="verify_tls" checked>
+        <label for="verify_tls" style="margin:0;">Verificar certificado TLS do portal (desmarque só para CKAN de teste com certificado autoassinado)</label>
+      </div>
+
+      <div class="botoes">
+        <button class="primario" type="button" id="btn-iniciar">Iniciar scan</button>
+      </div>
+      <div id="mensagem-erro"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Execuções</h2>
+    <div id="execucoes"><p class="aviso">Carregando...</p></div>
+  </section>
+
+  <script>
+    const root = document.documentElement;
+    const stored = localStorage.getItem('farol-theme');
+    if (stored) root.setAttribute('data-theme', stored);
+    function currentIsDark() {
+      const attr = root.getAttribute('data-theme');
+      if (attr) return attr === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const next = currentIsDark() ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('farol-theme', next);
+    });
+
+    function mostrarErro(msg) {
+      const el = document.getElementById('mensagem-erro');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    document.getElementById('btn-carregar-orgs').addEventListener('click', async () => {
+      const baseUrl = document.getElementById('base_url').value.trim();
+      const status = document.getElementById('orgs-status');
+      const lista = document.getElementById('orgs-lista');
+      if (!baseUrl) { mostrarErro('Preencha a URL base do CKAN antes de carregar organizações.'); return; }
+      mostrarErro('');
+      status.textContent = 'carregando...';
+      lista.innerHTML = '';
+      const verifyTls = document.getElementById('verify_tls').checked;
+      const apiKey = document.getElementById('api_key').value.trim();
+      const corpo = { base_url: baseUrl, verify: verifyTls, api_key: apiKey || null };
+      try {
+        const resp = await fetch('/api/scan/organizacoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpo),
+        });
+        if (resp.status === 401) { window.location.reload(); return; }
+        if (!resp.ok) throw new Error('resposta ' + resp.status);
+        const dados = await resp.json();
+        status.textContent = dados.organizacoes.length + ' organização(ões) encontrada(s)';
+        lista.innerHTML = dados.organizacoes.map((org) =>
+          '<label><input type="checkbox" class="org-check" value="' + org + '"> ' + org + '</label>'
+        ).join('');
+      } catch (err) {
+        status.textContent = '';
+        mostrarErro('Não foi possível listar organizações desse CKAN. Confira a URL e tente de novo.');
+      }
+    });
+
+    document.getElementById('btn-iniciar').addEventListener('click', async () => {
+      const botao = document.getElementById('btn-iniciar');
+      const baseUrl = document.getElementById('base_url').value.trim();
+      if (!baseUrl) { mostrarErro('Preencha a URL base do CKAN.'); return; }
+      mostrarErro('');
+      const orgs = Array.from(document.querySelectorAll('.org-check:checked')).map((el) => el.value);
+      const formatos = Array.from(document.querySelectorAll('#chips-formato input:checked')).map((el) => el.value);
+      const corpo = {
+        base_url: baseUrl,
+        ambiente: document.getElementById('ambiente').value,
+        orgs: orgs.length ? orgs : null,
+        formatos: formatos.length ? formatos : null,
+        incremental: document.getElementById('incremental').checked,
+        verify: document.getElementById('verify_tls').checked,
+        api_key: document.getElementById('api_key').value.trim() || null,
+      };
+      botao.disabled = true;
+      botao.textContent = 'Iniciando...';
+      try {
+        const resp = await fetch('/api/scan/iniciar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpo),
+        });
+        if (resp.status === 401) { window.location.reload(); return; }
+        if (!resp.ok) throw new Error('resposta ' + resp.status);
+        await atualizarExecucoes();
+      } catch (err) {
+        mostrarErro('Não foi possível iniciar o scan agora. Confira a URL do CKAN e tente de novo.');
+      } finally {
+        botao.disabled = false;
+        botao.textContent = 'Iniciar scan';
+      }
+    });
+
+    function formatarExecucao(e) {
+      const pct = e.total_recursos ? Math.round((e.processados / e.total_recursos) * 100) : 0;
+      const podeCancel = e.status === 'rodando';
+      return (
+        '<div class="execucao" data-id="' + e.id + '">' +
+          '<div class="execucao-topo">' +
+            '<span>execução #' + e.id + ' · ' + e.executado_por +
+              (e.orgs ? ' · orgs: ' + e.orgs : '') +
+              (e.formatos ? ' · formatos: ' + e.formatos : '') +
+              (e.status === 'rodando' && e.recurso_atual ? ' · processando: ' + e.recurso_atual : '') +
+            '</span>' +
+            (podeCancel ? '<button class="link-botao btn-cancelar" data-id="' + e.id + '">Cancelar</button>' : '') +
+            '<span class="execucao-status status-' + e.status + '">' + e.status + '</span>' +
+          '</div>' +
+          '<div class="barra"><div class="barra-preenchida" style="width:' + pct + '%"></div></div>' +
+          '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">' + e.processados + ' de ' + e.total_recursos + ' recurso(s)</div>' +
+        '</div>'
+      );
+    }
+
+    async function atualizarExecucoes() {
+      const ambiente = document.getElementById('ambiente').value;
+      try {
+        const resp = await fetch('/api/scan/execucoes?ambiente=' + ambiente);
+        if (resp.status === 401) { window.location.reload(); return; }
+        if (!resp.ok) return;
+        const dados = await resp.json();
+        const container = document.getElementById('execucoes');
+        container.innerHTML = dados.execucoes.length
+          ? dados.execucoes.map(formatarExecucao).join('')
+          : '<p class="aviso">Nenhuma execução ainda.</p>';
+        container.querySelectorAll('.btn-cancelar').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = 'Cancelando...';
+            try {
+              await fetch('/api/scan/cancelar/' + btn.dataset.id, { method: 'POST' });
+            } finally {
+              atualizarExecucoes();
+            }
+          });
+        });
+      } catch (err) {
+        // poll falhou uma vez - tenta de novo no proximo ciclo, sem alarmar o usuario por uma falha isolada
+      }
+    }
+
+    atualizarExecucoes();
+    setInterval(atualizarExecucoes, 3000);
+  </script>
+</body>
+</html>

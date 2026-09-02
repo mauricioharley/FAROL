@@ -1,0 +1,7 @@
+requests==2.34.2
+psycopg[binary]==3.2.3
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+starlette==1.6.0
+idna==3.19
+h11==0.16.0

@@ -1,0 +1,52 @@
+# Repositório "motor" da Farol: pii-engine/ + scanner/ + painel/ + painel-gerencial/
+# (detecção + auditoria em lote + os dois painéis - o motor de detecção e tudo
+# que o consome/exibe)
+#
+# Fora deste repo, de propósito:
+# - ckan-docker/      -> clone de terceiro (projeto oficial ckan/ckan-docker), não é nosso código
+# - ckanext-farol-guard/ -> repositório próprio, separado (plugin preso às dependências do CKAN)
+# - .env              -> credenciais reais deste deployment, nunca versionadas
+# - weak_dataset.csv / teste_fase2_variado.xml -> fixtures sintéticas de teste manual,
+#   soltas na raiz, fora de lugar, não fazem parte do código
+ckan-docker/
+ckanext-farol-guard/
+.env
+.env.*
+!.env.example
+weak_dataset.csv
+teste_fase2_variado.xml
+
+# Artefato de sessão de trabalho local - notas de retomada entre máquinas
+# e scripts avulsos de investigação pontual, nunca conteúdo do projeto em
+# si (nenhum dos dois é referenciado por nada no compose ou nos READMEs).
+HANDOFF_SESSAO.md
+fase4_scripts/
+
+# Trecho real de dado de produção: jamais versionar, mesma regra de "nunca
+# persiste o valor bruto" que vale para o motor em si - estes arquivos
+# existem só como insumo de trabalho local para montar conjunto de teste
+# rotulado, nunca para publicar.
+varredura_ampla.jsonl
+fase3_conjunto_rotulado.jsonl
+
+# Build gerado do site de documentação - reconstruído sob demanda via
+# mkdocs build, não versionado (a fonte em docs/src/ é o que importa).
+docs/site/
+
+# Build gerado do painel gerencial - node_modules e dist nunca versionados,
+# reconstruídos pelo Dockerfile a cada build de imagem.
+painel-gerencial/node_modules/
+painel-gerencial/dist/
+painel-gerencial/package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# Diversos
+.DS_Store
+*.log

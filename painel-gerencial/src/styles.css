@@ -1,0 +1,74 @@
+:root {
+  --bg: #F1F4F1; --surface: #FFFFFF; --surface-2: #E6ECE6;
+  --text: #142420; --text-muted: #51625B; --border: #D2DBD2;
+  --accent: #1F5750; --accent-strong: #123C37; --accent-soft: #DEEAE7;
+  --ok: #2C7A4C; --ok-soft: #E3F1E7;
+  --warn: #94650D; --warn-soft: #F5EAD2;
+  --crit: #9E3A2D; --crit-soft: #F5E0DB;
+  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+    --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+    --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+    --ok: #5FBE85; --ok-soft: #172B1D;
+    --warn: #E0B357; --warn-soft: #362A14;
+    --crit: #E17B6B; --crit-soft: #37211C;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+  --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+  --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+  --ok: #5FBE85; --ok-soft: #172B1D;
+  --warn: #E0B357; --warn-soft: #362A14;
+  --crit: #E17B6B; --crit-soft: #37211C;
+}
+* { box-sizing: border-box; }
+body { font-family: var(--font-display); background: var(--bg); color: var(--text); margin: 0; padding: 32px; }
+h1 { font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+h1 img.logo { flex-shrink: 0; }
+h2 { font-size: 1rem; margin: 0 0 12px; color: var(--text-muted); }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.topbar-actions { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+.topbar-actions a { color: var(--text-muted); text-decoration: none; }
+#theme-toggle {
+  font-family: var(--font-display); font-size: 0.85rem; cursor: pointer;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 999px; padding: 6px 14px;
+}
+.ambiente-tabs { display: flex; gap: 4px; background: var(--surface-2); border-radius: 999px; padding: 3px; }
+.ambiente-tabs button {
+  font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted);
+  background: none; border: none; cursor: pointer; padding: 5px 12px; border-radius: 999px;
+}
+.ambiente-tabs button.ativo { background: var(--surface); color: var(--accent-strong); font-weight: 600; }
+.cards { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; min-width: 170px; flex: 1 1 170px; }
+.card .label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+.card .value { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 600; color: var(--accent-strong); }
+.card .value.warn { color: var(--warn); }
+.card .value.crit { color: var(--crit); }
+.card .sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+section { margin-bottom: 32px; }
+.painel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+th { color: var(--text-muted); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+.barra-org { background: var(--surface-2); border-radius: 4px; height: 8px; overflow: hidden; width: 100px; }
+.barra-org-preenchida { background: var(--crit); height: 100%; }
+.vazio { color: var(--text-muted); font-size: 0.88rem; padding: 12px 0; }
+.erro-carregamento { color: var(--crit); font-size: 0.88rem; }
+.carregando { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.88rem; padding: 12px 0; }
+.spinner {
+  width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: girar 0.8s linear infinite; flex-shrink: 0;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+.chart-svg text { font-family: var(--font-mono); font-size: 10px; fill: var(--text-muted); }
+.chart-legenda { display: flex; gap: 18px; margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); }
+.chart-legenda-item { display: flex; align-items: center; gap: 6px; }
+.chart-legenda-cor { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }

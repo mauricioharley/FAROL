@@ -1,0 +1,63 @@
+site_name: FAROL
+site_description: "Detecção de dados pessoais (LGPD) em catálogos CKAN de dados abertos"
+docs_dir: src
+
+theme:
+  name: material
+  language: pt-BR
+  logo: img/farol-logo.svg
+  favicon: img/favicon.ico
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Alternar para tema escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Alternar para tema claro
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+    - search.suggest
+
+extra_css:
+  - extra.css
+
+nav:
+  - Visão geral: index.md
+  - Instalação:
+      - Pré-requisitos: instalacao/pre-requisitos.md
+      - Subir com Docker Compose: instalacao/subir-com-docker-compose.md
+      - Variáveis de ambiente: instalacao/variaveis-de-ambiente.md
+  - Guia do usuário:
+      - Painel técnico: guia-do-usuario/painel-tecnico.md
+      - Painel gerencial: guia-do-usuario/painel-gerencial.md
+  - Guia do administrador:
+      - Rodar o scanner: guia-do-administrador/rodar-o-scanner.md
+      - Plugin preventivo (ckanext-farol-guard): guia-do-administrador/plugin-ckan.md
+      - Roadmap (notificações, agendamento): guia-do-administrador/roadmap.md
+  - Referência de API: referencia-api/pii-engine.md
+  - Segurança e privacidade: seguranca-e-privacidade.md
+  - Solução de problemas: solucao-de-problemas.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - tables
+  - toc:
+      permalink: true

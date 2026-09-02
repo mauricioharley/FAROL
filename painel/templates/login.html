@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAROL - Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F4F1; --surface: #FFFFFF; --surface-2: #E6ECE6;
+    --text: #142420; --text-muted: #51625B; --border: #D2DBD2;
+    --accent: #1F5750; --accent-strong: #123C37; --accent-soft: #DEEAE7;
+    --crit: #9E3A2D; --crit-soft: #F5E0DB;
+    --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+      --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+      --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+      --crit: #E17B6B; --crit-soft: #37211C;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font-display); background: var(--bg); color: var(--text);
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 36px 32px; width: 320px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .logo { display: block; margin: 0 auto 14px; }
+  h1 { font-size: 1.15rem; margin: 0 0 4px; color: var(--accent-strong); text-align: center; }
+  p.subtitulo { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 24px; text-align: center; }
+  label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 4px; }
+  input {
+    width: 100%; font-family: var(--font-display); font-size: 0.95rem;
+    padding: 9px 12px; margin-bottom: 16px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--bg); color: var(--text);
+  }
+  button {
+    width: 100%; font-family: var(--font-display); font-size: 0.92rem; font-weight: 600;
+    padding: 10px; border: none; border-radius: 6px; cursor: pointer;
+    background: var(--accent); color: #fff;
+  }
+  button:hover { background: var(--accent-strong); }
+  .erro {
+    background: var(--crit-soft); color: var(--crit); font-size: 0.82rem;
+    padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+  <form class="card" method="post" action="{{ acao|default('/login') }}">
+    {% set tamanho_logo = 56 %}
+    {% include '_logo.html' %}
+    <h1>FAROL</h1>
+    <p class="subtitulo">{{ titulo|default('Painel técnico') }}</p>
+    {% if erro %}<div class="erro">Usuário ou senha inválidos.</div>{% endif %}
+    <input type="hidden" name="proximo" value="{{ proximo }}">
+    <label for="usuario">Usuário</label>
+    <input type="text" id="usuario" name="usuario" autocomplete="username" required autofocus>
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+    <button type="submit">Entrar</button>
+  </form>
+</body>
+</html>

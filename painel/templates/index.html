@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% if tem_execucao_rodando %}<meta http-equiv="refresh" content="10">{% endif %}
+<title>FAROL - Painel técnico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1F4F1; --surface: #FFFFFF; --surface-2: #E6ECE6;
+    --text: #142420; --text-muted: #51625B; --border: #D2DBD2;
+    --accent: #1F5750; --accent-strong: #123C37; --accent-soft: #DEEAE7;
+    --ok: #2C7A4C; --ok-soft: #E3F1E7;
+    --warn: #8A5D0B; --warn-soft: #F5EAD2;
+    --crit: #9E3A2D; --crit-soft: #F5E0DB;
+    --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+      --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+      --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+      --ok: #5FBE85; --ok-soft: #172B1D;
+      --warn: #E0B357; --warn-soft: #362A14;
+      --crit: #E17B6B; --crit-soft: #37211C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101512; --surface: #171F1C; --surface-2: #1D2723;
+    --text: #E7EDE9; --text-muted: #9CADA4; --border: #29342F;
+    --accent: #57C2AE; --accent-strong: #86D9C8; --accent-soft: #1A332F;
+    --ok: #5FBE85; --ok-soft: #172B1D;
+    --warn: #E0B357; --warn-soft: #362A14;
+    --crit: #E17B6B; --crit-soft: #37211C;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: var(--font-display); background: var(--bg); color: var(--text); margin: 0; padding: 32px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .logo { flex-shrink: 0; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+  #theme-toggle {
+    font-family: var(--font-display); font-size: 0.85rem; cursor: pointer;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 14px;
+  }
+  .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 160px; }
+  .stat .label { font-size: 0.8rem; color: var(--text-muted); }
+  .stat .value { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; color: var(--accent-strong); }
+  .stat .value.alerta { color: var(--warn); }
+  section { margin-bottom: 28px; }
+  .execucao { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+  .execucao-topo { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 8px; }
+  .barra { background: var(--surface-2); border-radius: 999px; height: 10px; overflow: hidden; }
+  .barra-preenchida { background: var(--accent); height: 100%; border-radius: 999px; transition: width 0.3s; }
+  .execucao-status { font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+  .status-rodando { background: var(--warn-soft); color: var(--warn); }
+  .status-concluido { background: var(--ok-soft); color: var(--ok); }
+  .status-erro { background: var(--crit-soft); color: var(--crit); }
+  .legenda { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
+  /* table-layout: fixed + colgroup: a largura de cada coluna é fixa, então o
+     conteúdo que não couber termina em reticências em vez de forçar a tabela
+     a crescer além do contêiner - nunca há rolagem horizontal, com qualquer
+     volume de dado (mesmo comportamento em "Sintético" e "Produção"). */
+  .table-wrap { overflow-y: auto; overflow-x: hidden; max-height: 65vh; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; position: sticky; top: 0; z-index: 1; white-space: normal; }
+  td.col-revisao { overflow: visible; text-overflow: clip; white-space: normal; }
+  td.col-recurso { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+  td.col-recurso .recurso-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+  td.col-recurso .link-recurso { flex: none; color: var(--accent); text-decoration: none; font-size: 0.95rem; line-height: 1; }
+  td.col-recurso .link-recurso:hover { color: var(--accent-strong); }
+  tr:last-child td { border-bottom: none; }
+  .th-ordenavel { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .setas { display: inline-flex; flex-direction: column; line-height: 0.55; gap: 2px; }
+  .seta { font-size: 0.55rem; color: var(--text-muted); text-decoration: none; opacity: 0.55; }
+  .seta:hover { opacity: 1; }
+  .seta.ativa { color: var(--accent); opacity: 1; }
+  .chip { padding: 2px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+  .chip-bloquear { background: var(--crit-soft); color: var(--crit); }
+  .chip-alertar { background: var(--warn-soft); color: var(--warn); }
+  .chip-liberar { background: var(--ok-soft); color: var(--ok); }
+  .chip-nao_analisado { background: var(--surface-2); color: var(--text-muted); }
+  .chip-revisao-pendente { background: var(--warn-soft); color: var(--warn); }
+  .chip-revisao-confirmado_positivo { background: var(--crit-soft); color: var(--crit); }
+  .chip-revisao-falso_positivo { background: var(--ok-soft); color: var(--ok); }
+  .tag-ambiente { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; background: var(--accent-soft); color: var(--accent-strong); padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 8px; }
+  .topbar-actions { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+  .ambiente-tabs { display: flex; gap: 4px; background: var(--surface-2); border-radius: 999px; padding: 3px; }
+  .ambiente-tabs a { color: var(--text-muted); text-decoration: none; padding: 5px 12px; border-radius: 999px; }
+  .ambiente-tabs a.ativo { background: var(--surface); color: var(--accent-strong); font-weight: 600; }
+  .form-revisao { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .form-revisao button { font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: var(--surface); color: var(--text); }
+  .form-revisao button.positivo { border-color: var(--crit); color: var(--crit); }
+  .form-revisao button.falso { border-color: var(--ok); color: var(--ok); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1 style="display:flex;align-items:center;gap:10px;">
+      {% include '_logo.html' %}
+      FAROL - Painel técnico <span class="tag-ambiente">{{ ambiente }}</span>
+    </h1>
+    <div class="topbar-actions">
+      <div class="ambiente-tabs">
+        <a class="{{ 'ativo' if ambiente == 'producao' else '' }}" href="?ambiente=producao"
+           title="Achados de recursos reais, já publicados no portal">Produção</a>
+        <a class="{{ 'ativo' if ambiente == 'sintetico' else '' }}" href="?ambiente=sintetico"
+           title="Achados do CKAN de teste, com CSV fictício de exemplo - nunca dado real">Sintético</a>
+      </div>
+      <a href="/scan" style="color:var(--text-muted);font-size:0.85rem;">Novo scan ↗</a>
+      <a href="/gerencial" style="color:var(--text-muted);font-size:0.85rem;">Painel gerencial ↗</a>
+      <button id="theme-toggle" type="button">🌓 Alternar tema</button>
+      <span style="font-size:0.82rem;color:var(--text-muted);">{{ usuario }}</span>
+      <a href="/logout" style="font-size:0.82rem;color:var(--text-muted);">Sair</a>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="label">Recursos auditados</div><div class="value">{{ stats.recursos_auditados }}</div></div>
+    <div class="stat"><div class="label">Achados de alto risco</div><div class="value">{{ stats.achados_alto_risco }}</div></div>
+    <div class="stat"><div class="label">Não analisados</div><div class="value">{{ stats.nao_analisados }}</div></div>
+    <div class="stat"><div class="label">Pendentes de revisão</div><div class="value alerta">{{ stats.pendentes_revisao }}</div></div>
+  </div>
+
+  {% if execucoes %}
+  <section>
+    <h2>Progresso das execuções</h2>
+    {% for e in execucoes %}
+    <div class="execucao">
+      <div class="execucao-topo">
+        <span>
+          execução #{{ e.id }} · {{ e.executado_por }}{% if e.orgs %} · orgs: {{ e.orgs }}{% endif %}
+          {% if e.status == 'rodando' %} · processando: {{ e.recurso_atual }}{% endif %}
+        </span>
+        <span class="execucao-status status-{{ e.status }}">{{ e.status }}</span>
+      </div>
+      <div class="barra">
+        <div class="barra-preenchida" style="width: {{ (e.processados / e.total_recursos * 100) if e.total_recursos else 0 }}%"></div>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">{{ e.processados }} de {{ e.total_recursos }} recurso(s)</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <p class="legenda">
+    <strong>Camada 1</strong>: regex/heurística de nome de coluna e valor ·
+    <strong>Camada 2</strong>: NER (nome de pessoa, local, organização, e-mail, telefone, saúde, CPF/CNPJ) ·
+    <strong>Camada 3</strong>: classificador LLM, refina a categoria exata do Art. 5º, II da LGPD (nunca bloqueia sozinha)
+  </p>
+
+  {% macro th_ordenavel(chave, rotulo) %}
+    <th>
+      <span class="th-ordenavel">
+        {{ rotulo }}
+        <span class="setas">
+          <a class="seta {{ 'ativa' if ordenar == chave and direcao == 'asc' else '' }}"
+             href="?ambiente={{ ambiente }}&ordenar={{ chave }}&direcao=asc"
+             title="Ordenar {{ rotulo }} crescente" aria-label="Ordenar {{ rotulo }} crescente">▲</a>
+          <a class="seta {{ 'ativa' if ordenar == chave and direcao == 'desc' else '' }}"
+             href="?ambiente={{ ambiente }}&ordenar={{ chave }}&direcao=desc"
+             title="Ordenar {{ rotulo }} decrescente" aria-label="Ordenar {{ rotulo }} decrescente">▼</a>
+        </span>
+      </span>
+    </th>
+  {% endmacro %}
+  <div class="table-wrap">
+  <table>
+    <colgroup>
+      <col style="width:8%"><col style="width:13%"><col style="width:13%"><col style="width:8%">
+      <col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:8%">
+      <col style="width:15%"><col style="width:6%"><col style="width:6%">
+    </colgroup>
+    <thead>
+      <tr>
+        {{ th_ordenavel('org', 'Org') }}
+        {{ th_ordenavel('dataset', 'Dataset') }}
+        {{ th_ordenavel('recurso', 'Recurso') }}
+        {{ th_ordenavel('campo', 'Campo') }}
+        {{ th_ordenavel('categoria', 'Categoria') }}
+        {{ th_ordenavel('confianca', 'Confiança') }}
+        <th>Camada</th>
+        {{ th_ordenavel('veredito', 'Veredito') }}
+        <th>Revisão</th><th>Executado por</th><th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for a in achados %}
+      <tr>
+        <td title="{{ a.org }}">{{ a.org }}</td>
+        <td title="{{ a.dataset_id }}">{{ a.dataset_id }}</td>
+        <td class="col-recurso">
+          <span class="recurso-nome" title="{{ a.recurso_nome or a.recurso }}">{{ a.recurso_nome or a.recurso }}</span>
+          {% if portal_base %}
+          <a class="link-recurso" href="{{ portal_base }}/dataset/{{ a.dataset_id }}/resource/{{ a.recurso }}"
+             target="_blank" rel="noopener noreferrer" title="Ver recurso original no portal (abre em nova aba)">↗</a>
+          {% endif %}
+        </td>
+        <td title="{{ a.campo or '-' }}">{{ a.campo or '-' }}</td>
+        <td title="{{ a.justificativa or a.categoria or (a.motivo_nao_analisado or '-') }}">{{ a.categoria or (a.motivo_nao_analisado or '-') }}</td>
+        <td>{{ '%.0f'|format(a.confianca*100) + '%' if a.confianca else '-' }}</td>
+        <td>{{ a.camada or '-' }}</td>
+        <td><span class="chip chip-{{ a.veredito }}">{{ a.veredito }}</span></td>
+        <td class="col-revisao">
+          {% if a.veredito in ('alertar', 'bloquear') %}
+            {% if a.revisao == 'pendente' %}
+            <form class="form-revisao" method="post" action="/revisar/{{ a.id }}">
+              <input type="hidden" name="ambiente" value="{{ ambiente }}">
+              <input type="hidden" name="ordenar" value="{{ ordenar or '' }}">
+              <input type="hidden" name="direcao" value="{{ direcao or 'asc' }}">
+              <button type="submit" name="status_revisao" value="confirmado_positivo" class="positivo">confirmar</button>
+              <button type="submit" name="status_revisao" value="falso_positivo" class="falso">falso+</button>
+            </form>
+            {% else %}
+            <span class="chip chip-revisao-{{ a.revisao }}">{{ a.revisao }}</span>
+            <div style="font-size:0.7rem;color:var(--text-muted);">{{ a.revisado_por }}</div>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--text-muted);">-</span>
+          {% endif %}
+        </td>
+        <td title="{{ a.executado_por }}">{{ a.executado_por }}</td>
+        <td title="{{ a.timestamp }}">{{ a.timestamp }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="11" style="text-align:center;color:var(--text-muted);white-space:normal;">
+          Nenhum achado encontrado para o ambiente selecionado. Se ainda não houve nenhum scan aqui, inicie um em "Novo scan".
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <script>
+    const root = document.documentElement;
+    const stored = localStorage.getItem('farol-theme');
+    if (stored) root.setAttribute('data-theme', stored);
+    function currentIsDark() {
+      const attr = root.getAttribute('data-theme');
+      if (attr) return attr === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const next = currentIsDark() ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('farol-theme', next);
+    });
+
+    // Envia a revisao via fetch() e atualiza so' a celula da linha revisada -
+    // sem isso, o POST normal do form navega a pagina inteira de volta para
+    // o topo da tabela a cada "confirmar"/"falso+", o que atrapalha revisar
+    // varios achados em sequencia. Sem JS (ou se o fetch falhar), o form
+    // ainda funciona normalmente via o fallback de redirect no backend.
+    document.querySelectorAll('.form-revisao').forEach((form) => {
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const botao = ev.submitter;
+        const celula = form.closest('td');
+        const dados = new FormData(form);
+        dados.set('status_revisao', botao.value);
+        botao.disabled = true;
+        try {
+          const resp = await fetch(form.action, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: dados,
+          });
+          if (resp.status === 401) { window.location.reload(); return; }
+          if (!resp.ok) throw new Error('resposta ' + resp.status);
+          const resultado = await resp.json();
+          const classeChip = 'chip-revisao-' + resultado.revisao;
+          celula.innerHTML =
+            '<span class="chip ' + classeChip + '">' + resultado.revisao + '</span>' +
+            '<div style="font-size:0.7rem;color:var(--text-muted);">' + resultado.revisado_por + '</div>';
+        } catch (err) {
+          botao.disabled = false;
+          alert('Não foi possível registrar a revisão agora. Tente novamente.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

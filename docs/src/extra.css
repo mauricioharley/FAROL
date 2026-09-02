@@ -1,0 +1,38 @@
+/* Tokens visuais do FAROL (paleta petróleo/teal), adaptados para as variáveis de tema do
+   mkdocs-material em vez de reinventar - mesma identidade visual usada nos painéis. */
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1F5750;
+  --md-primary-fg-color--dark: #123C37;
+  --md-primary-fg-color--light: #DEEAE7;
+  --md-accent-fg-color: #1F5750;
+  --md-default-bg-color: #F1F4F1;
+  --md-typeset-a-color: #1F5750;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #171F1C;
+  --md-primary-fg-color--dark: #101512;
+  --md-accent-fg-color: #57C2AE;
+  --md-default-bg-color: #101512;
+  --md-typeset-a-color: #57C2AE;
+}
+
+/* Chips de severidade, mesmo padrão semântico do painel técnico e da Arquitetura */
+.chip {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  font-family: var(--md-code-font-family);
+}
+.chip-bloquear { background: #F5E0DB; color: #9E3A2D; }
+.chip-alertar { background: #F5EAD2; color: #94650D; }
+.chip-liberar { background: #E3F1E7; color: #2C7A4C; }
+.chip-nao-analisado { background: #E6ECE6; color: #51625B; }
+
+[data-md-color-scheme="slate"] .chip-bloquear { background: #37211C; color: #E17B6B; }
+[data-md-color-scheme="slate"] .chip-alertar { background: #362A14; color: #E0B357; }
+[data-md-color-scheme="slate"] .chip-liberar { background: #172B1D; color: #5FBE85; }
+[data-md-color-scheme="slate"] .chip-nao-analisado { background: #1D2723; color: #9CADA4; }
